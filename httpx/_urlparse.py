@@ -312,6 +312,12 @@ def urlparse(url: str = "", **kwargs: str | None) -> ParseResult:
     host = kwargs.get("host", authority_dict["host"]) or ""
     port = kwargs.get("port", authority_dict["port"])
 
+    # AUTHORITY_REGEX can match a lone "[" as the host when an IPv6 literal is
+    # missing its closing "]", leaving a misleading "Invalid port" error from
+    # the leftover ":...". Prefer a clear IPv6 error for that case.
+    if host.startswith("[") and not host.endswith("]"):
+        raise InvalidURL(f"Invalid IPv6 address: {authority!r}")
+
     # Normalize and validate each component.
     # We end up with a parsed representation of the URL,
     # with components that are plain ASCII bytestrings.

@@ -837,6 +837,21 @@ def test_url_invalid_ipv6():
     assert str(exc.value) == "Invalid IPv6 address: '[2001]'"
 
 
+
+@pytest.mark.parametrize(
+    "url_str, expected",
+    [
+        ("http://[::1", "Invalid IPv6 address: '[::1'"),
+        ("http://[::", "Invalid IPv6 address: '[::'"),
+        ("http://[2001:db8::1", "Invalid IPv6 address: '[2001:db8::1'"),
+    ],
+)
+def test_url_unclosed_ipv6_literal(url_str, expected):
+    with pytest.raises(httpx.InvalidURL) as exc:
+        httpx.URL(url_str)
+    assert str(exc.value) == expected
+
+
 @pytest.mark.parametrize("host", ["[::ffff:192.168.0.1]", "::ffff:192.168.0.1"])
 def test_ipv6_url_from_raw_url(host):
     url = httpx.URL(scheme="https", host=host, port=443, path="/")
